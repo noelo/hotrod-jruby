@@ -17,25 +17,25 @@ class RemoteCache
 
   java_import 'org.infinispan.client.hotrod.RemoteCacheManager'
 
-  require "src/infinispanError"
-  require "src/versioned_value"
+  require "lib/infinispanError"
+  require "lib/versioned_value"
 
 
-  defaultConfig ={
-      "infinispan.client.hotrod.request_balancing_strategy" => "org.infinispan.client.hotrod.impl.transport.tcp.RoundRobinBalancingStrategy",
-      "infinispan.client.hotrod.server_list" => "127.0.0.1:11311",
-      "infinispan.client.hotrod.force_return_values" => "false",
-      "infinispan.client.hotrod.tcp_no_delay" => "true",
-      "infinispan.client.hotrod.ping_on_startup" => "true",
-      "infinispan.client.hotrod.transport_factory" => "org.infinispan.client.hotrod.impl.transport.tcp.TcpTransportFactory",
-      "infinispan.client.hotrod.marshaller" => "org.infinispan.marshall.jboss.GenericJBossMarshaller",
-      "infinispan.client.hotrod.async_executor_factory" => "org.infinispan.client.hotrod.impl.async.DefaultAsyncExecutorFactory",
-      "infinispan.client.hotrod.default_executor_factory.pool_size" => 10,
-      "infinispan.client.hotrod.default_executor_factory.queue_size" => 100000,
-      "infinispan.client.hotrod.hash_function_impl.1" => "org.infinispan.client.hotrod.impl.consistenthash.ConsistentHashV1",
-      "infinispan.client.hotrod.key_size_estimate" => 64,
-      "infinispan.client.hotrod.value_size_estimate" => 512
-  }
+#  defaultConfig ={
+#      "infinispan.client.hotrod.request_balancing_strategy" => "org.infinispan.client.hotrod.impl.transport.tcp.RoundRobinBalancingStrategy",
+#      "infinispan.client.hotrod.server_list" => "127.0.0.1:11311",
+#      "infinispan.client.hotrod.force_return_values" => "false",
+#      "infinispan.client.hotrod.tcp_no_delay" => "true",
+#      "infinispan.client.hotrod.ping_on_startup" => "true",
+#      "infinispan.client.hotrod.transport_factory" => "org.infinispan.client.hotrod.impl.transport.tcp.TcpTransportFactory",
+#      "infinispan.client.hotrod.marshaller" => "org.infinispan.marshall.jboss.GenericJBossMarshaller",
+#      "infinispan.client.hotrod.async_executor_factory" => "org.infinispan.client.hotrod.impl.async.DefaultAsyncExecutorFactory",
+#      "infinispan.client.hotrod.default_executor_factory.pool_size" => 10,
+#      "infinispan.client.hotrod.default_executor_factory.queue_size" => 100000,
+#      "infinispan.client.hotrod.hash_function_impl.1" => "org.infinispan.client.hotrod.impl.consistenthash.ConsistentHashV1",
+#      "infinispan.client.hotrod.key_size_estimate" => 64,
+#      "infinispan.client.hotrod.value_size_estimate" => 512
+#  }
 
 
   def initialize(cache_name="", default_config_override={})
@@ -43,7 +43,7 @@ class RemoteCache
       if default_config_override.empty?
         @rCM = RemoteCacheManager.new
       else
-        tmpCFG = java.util.properties.new
+        tmpCFG = java.util.Properties.new
         default_config_override.each do |k, v|
           tmpCFG.setProperty(k, v)
         end
@@ -83,6 +83,10 @@ class RemoteCache
     @currCache.size
   end
 
+  def name
+    @currCache.getName()
+  end
+
   def version()
     @currCache.version
   end
@@ -116,6 +120,4 @@ class RemoteCache
   def removeWithVersion(key, version)
     @currCache.removeWithVersion(Marshal.dump(key), version)
   end
-
-
 end
