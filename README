@@ -1,0 +1,17 @@
+This project provides a jruby wrapper for the Infinispan Hot Rod client library.
+Hot Rod is the server-client protocol used to remotely access an Infinispan Data Grid.
+For more information on Infinispan see http://www.jboss.org/infinispan
+For more information on Hot Rod protocol see http://community.jboss.org/wiki/UsingHotRodServer and http://infinispan.blogspot.com/2010/05/clientserver-architectures-strike-back.html
+
+In order to use this library, the following actions need to be performed
+[1] Download the latest Infinispan stable release from http://www.jboss.org/infinispan/downloads and unzip/untar it
+[2] Configure the jruby runtime with the location of the Infinispan libraries using Java system property InfinispanHome e.g. -J-DInfinispanHome=/home/dev/infinispan-4.2.1.CR4/
+
+This library implements the methods of http://docs.jboss.org/infinispan/4.2/apidocs/org/infinispan/client/hotrod/impl/RemoteCacheImpl.html with the following exceptions
+[1] Asynchronous methods are not implemented
+[2] The ContainsKey method is not implemented
+[3] The GetBulk methods are not supported
+[4] The statistics method is not supported
+
+
+
