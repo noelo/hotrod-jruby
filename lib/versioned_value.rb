@@ -14,8 +14,8 @@ class VersionedValue
   end
 
   def ==(another_inst)
-    self.t1 == another_inst.version
-    self.t2 == another_inst.value
+    self.version == another_inst.version
+    self.value == another_inst.value
   end
 
 end

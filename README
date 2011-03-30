@@ -12,6 +12,8 @@ This library implements the methods of http://docs.jboss.org/infinispan/4.2/apid
 [2] The ContainsKey method is not implemented
 [3] The GetBulk methods are not supported
 [4] The statistics method is not supported
+[5] replaceWithVersion and removeWithVersion do not return previous values until https://issues.jboss.org/browse/ISPN-1008 is completed
+
 
 
 

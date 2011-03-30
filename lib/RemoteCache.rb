@@ -65,18 +65,28 @@ class RemoteCache
     @rCM.stop
   end
 
-  def put(key, value, lifespan=-1, lifeSpanUnit=java::util::concurrent::TimeUnit::SECONDS, maxIdleTime=-1, maxIdleTimeUnit=java::util::concurrent::TimeUnit::SECONDS)
-    @currCache.put(Marshal.dump(key), Marshal.dump(value), lifespan, lifeSpanUnit, maxIdleTime, maxIdleTimeUnit)
+  def put(key, value, return_previous=false, lifespan=-1, lifeSpanUnit=java::util::concurrent::TimeUnit::SECONDS, maxIdleTime=-1, maxIdleTimeUnit=java::util::concurrent::TimeUnit::SECONDS)
+    if (return_previous)
+      tmpobj = @currCache.withFlags(org::infinispan::client::hotrod::Flag::FORCE_RETURN_VALUE).put(Marshal.dump(key), Marshal.dump(value), lifespan, lifeSpanUnit, maxIdleTime, maxIdleTimeUnit)
+    else
+      tmpobj = @currCache.put(Marshal.dump(key), Marshal.dump(value), lifespan, lifeSpanUnit, maxIdleTime, maxIdleTimeUnit)
+    end
+    return Marshal.load(tmpobj) unless tmpobj.nil?
   end
 
   def putAll(values={}, lifespan=-1, lifeSpanUnit=java::util::concurrent::TimeUnit::SECONDS, maxIdleTime=-1, maxIdleTimeUnit=java::util::concurrent::TimeUnit::SECONDS)
     values.each do |k, v|
-      self.put(Marshal.dump(k), Marshal.dump(v), lifespan, lifeSpanUnit, maxIdleTime, maxIdleTimeUnit)
+      self.put(Marshal.dump(k), Marshal.dump(v), false, lifespan, lifeSpanUnit, maxIdleTime, maxIdleTimeUnit)
     end
   end
 
-  def putIfAbsent(k, v, lifespan=-1, lifeSpanUnit=java::util::concurrent::TimeUnit::SECONDS, maxIdleTime=-1, maxIdleTimeUnit=java::util::concurrent::TimeUnit::SECONDS)
-    @currCache.putIfAbsent(Marshal.dump(k), Marshal.dump(v), lifespan, lifeSpanUnit, maxIdleTime, maxIdleTimeUnit)
+  def putIfAbsent(k, v, return_previous=false, lifespan=-1, lifeSpanUnit=java::util::concurrent::TimeUnit::SECONDS, maxIdleTime=-1, maxIdleTimeUnit=java::util::concurrent::TimeUnit::SECONDS)
+    if (return_previous)
+      tmpobj = @currCache.withFlags(org::infinispan::client::hotrod::Flag::FORCE_RETURN_VALUE).putIfAbsent(Marshal.dump(k), Marshal.dump(v), lifespan, lifeSpanUnit, maxIdleTime, maxIdleTimeUnit)
+    else
+      tmpobj = @currCache.putIfAbsent(Marshal.dump(k), Marshal.dump(v), lifespan, lifeSpanUnit, maxIdleTime, maxIdleTimeUnit)
+    end
+    return Marshal.load(tmpobj) unless tmpobj.nil?
   end
 
   def size()
@@ -91,8 +101,13 @@ class RemoteCache
     @currCache.version
   end
 
-  def remove(key)
-    @currCache.remove(Marshal.dump(key))
+  def remove(key, return_previous=false)
+    if (return_previous)
+      tmpobj = @currCache.withFlags(org::infinispan::client::hotrod::Flag::FORCE_RETURN_VALUE).remove(Marshal.dump(key))
+    else
+      tmpobj = @currCache.remove(Marshal.dump(key))
+    end
+    return Marshal.load(tmpobj) unless tmpobj.nil?
   end
 
   def clear
@@ -101,7 +116,7 @@ class RemoteCache
 
   def get(key)
     tmpobj = @currCache.get(Marshal.dump(key))
-    tmpobj.nil? ? nil : Marshal.load(tmpobj)
+    return Marshal.load(tmpobj) unless tmpobj.nil?
   end
 
   def getVersioned(key)
@@ -109,15 +124,18 @@ class RemoteCache
     return VersionedValue.new(tmpobj) unless tmpobj.nil?
   end
 
-  def replace(key, value, lifespan=-1, lifeSpanUnit=java::util::concurrent::TimeUnit::SECONDS, maxIdleTime=-1, maxIdleTimeUnit=java::util::concurrent::TimeUnit::SECONDS)
-    @currCache.replace(Marshal.dump(key), Marshal.dump(value), lifespan, lifeSpanUnit, maxIdleTime, maxIdleTimeUnit)
+  def replace(key, value, return_previous=false, lifespan=-1, lifeSpanUnit=java::util::concurrent::TimeUnit::SECONDS, maxIdleTime=-1, maxIdleTimeUnit=java::util::concurrent::TimeUnit::SECONDS)
+    tmpobj = @currCache.withFlags(org::infinispan::client::hotrod::Flag::FORCE_RETURN_VALUE).replace(Marshal.dump(key), Marshal.dump(value), lifespan, lifeSpanUnit, maxIdleTime, maxIdleTimeUnit)
+    return Marshal.load(tmpobj) unless tmpobj.nil?
   end
 
-  def replaceWithVersion(key, value, version, lifespanSeconds=-1, maxIdleTimeSeconds=-1)
+  def replaceWithVersion(key, value, version, return_previous=false, lifespanSeconds=-1, maxIdleTimeSeconds=-1)
+    #TODO - return previous will only work when https://issues.jboss.org/browse/ISPN-1008 is implemented
     @currCache.replaceWithVersion(Marshal.dump(key), Marshal.dump(value), version, lifespanSeconds, maxIdleTimeSeconds)
   end
 
-  def removeWithVersion(key, version)
-    @currCache.removeWithVersion(Marshal.dump(key), version)
+  def removeWithVersion(key, version, return_previous=false)
+    #TODO - return previous will only work when https://issues.jboss.org/browse/ISPN-1008 is implemented
+    tmpobj = @currCache.removeWithVersion(Marshal.dump(key), version)
   end
 end

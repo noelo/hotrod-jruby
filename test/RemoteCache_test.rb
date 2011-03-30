@@ -19,12 +19,12 @@ class RemoteCache_test < Test::Unit::TestCase
       x = RemoteCache.new("", ctor_prop)
       assert_not_nil(x, "Failed to retrieve default cache")
 
-      tmpKey = java.lang.System.currentTimeMillis.to_s
-      tmpVal = java.lang.System.currentTimeMillis.to_s
+      @tmpKey = java.lang.System.currentTimeMillis.to_s
+      @tmpVal = java.lang.System.currentTimeMillis.to_s
       x.put(@tmpKey, @tmpVal)
 
       retVal = x.remove(@tmpKey)
-      assert_not_nil(retVal, "Return value should have been returned")
+      assert_equal(@tmpVal, retVal, "Return value should have been returned")
     end
   end
 
@@ -73,7 +73,7 @@ class RemoteCache_test < Test::Unit::TestCase
     end
 
     should "Honor time to live eviction " do
-      @x.put(@tmpKey, @tmpVal, 5)
+      @x.put(@tmpKey, @tmpVal, false, 5)
       sleep(6)
       assert_nil(@x.get(@tmpKey), "Value was found for key #{@tmpKey}, it should have expired and been evicted")
     end
@@ -89,7 +89,7 @@ class RemoteCache_test < Test::Unit::TestCase
       assert_not_equal(tmpVal2, retVal, "Retrieved value #{retVal} should not be the same as the initial inserted value #{tmpVal2}")
     end
 
-    should "putIfAbsent should only insert values if not already present in the case" do
+    should "putIfAbsent should only insert values if not already present in the cache" do
       @x.put(@tmpKey, @tmpVal)
       retVal = @x.get(@tmpKey)
 
@@ -128,7 +128,6 @@ class RemoteCache_test < Test::Unit::TestCase
       @x.put(@tmpKey, @tmpVal)
     end
 
-
     should "Handle removal of inserted objects" do
       tmpVal2 = CacheValueClass.new("aval", "bval")
       @x.put(@tmpKey, tmpVal2)
@@ -143,8 +142,6 @@ class RemoteCache_test < Test::Unit::TestCase
       puts retVal
       assert((@tmpVal.eql? retVal.value), "Retrieved value #{retVal} not the same as the inserted value #{@tmpVal}")
     end
-
-    should
 
     should "Handle replancement of inserted object" do
       @x.clear
@@ -184,5 +181,45 @@ class RemoteCache_test < Test::Unit::TestCase
     end
   end
 
+  context "Cache operations with return values requested" do
+    setup do
+      @x = RemoteCache.new
+      @tmpKey = java.lang.System.currentTimeMillis.to_s
+      @tmpVal = java.lang.System.currentTimeMillis.to_s
+      @x.put(@tmpKey, @tmpVal)
+    end
 
+    should "Return previous value during put" do
+      tmpObj = @x.put(@tmpKey, "nom,nom,nom!!", true)
+      assert_equal(@tmpVal, tmpObj)
+    end
+
+    should "Return previous value during remove" do
+      tmpObj = @x.remove(@tmpKey, true)
+      assert_equal(@tmpVal, tmpObj)
+    end
+
+    should "Return previous value after replace" do
+      tmpObj = @x.replace(@tmpKey, "nom,nom,nom!!", true)
+      assert_equal(@tmpVal, tmpObj)
+    end
+
+    should "putIfAbsent should return previous value if present in the cache" do
+      newVal = @tmpVal+"FFF"
+      retVal2 = @x.putIfAbsent(@tmpKey, newVal,true)
+      assert_equal(@tmpVal, retVal2, "Initial value not returned")
+    end
+
+    should "putIfAbsent should return nil value if not present in the cache" do
+      newVal = @tmpVal+"FFF"
+      retVal2 = @x.putIfAbsent(@tmpKey+"fff", newVal,true)
+      assert_nil(retVal2, "Nil should have been returned")
+    end
+
+    should "Return previous Versioned value" do
+      retVal = @x.getVersioned(@tmpKey)
+      retVal2 = @x.removeWithVersion(@tmpKey, retVal.version,true)
+      assert_equal(retVal, retVal2, "Returned versioned value should match previous retrieved value")
+    end
+  end
 end
